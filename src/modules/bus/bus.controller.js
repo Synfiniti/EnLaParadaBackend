@@ -26,25 +26,21 @@ export const geocodificarDireccion = async (req, res) => {
   }
 
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY; 
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
       direccion,
-    )}&limit=1&viewbox=-67.0,10.7,-66.7,10.3&bounded=1&countrycodes=ve`;
+    )}&region=VE&key=${apiKey}`;
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'EnLaParada/1.0 (jeangutierrez18@gmail.com)',
-      },
-    });
-
+    const response = await fetch(url);
     const data = await response.json();
 
-    if (data.length === 0) {
+    if (!data.results || data.results.length === 0) {
       return res.status(404).json({ message: 'No se encontraron coordenadas para esa dirección' });
     }
 
-    const { lat, lon } = data[0];
+    const { lat, lng } = data.results[0].geometry.location;
 
-    res.status(200).json({ lat: parseFloat(lat), lng: parseFloat(lon) });
+    res.status(200).json({ lat, lng });
   } catch (error) {
     console.error('Error geocodificando dirección:', error);
     res.status(500).json({ message: 'Error geocodificando dirección' });
