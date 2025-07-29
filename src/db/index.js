@@ -1,6 +1,15 @@
 import { Client } from 'pg';
-const connectionString =
-  process.env.NODE_ENV === 'dev' ? process.env.DATABASE_DEV_URL : process.env.DATABASE_URL;
-const db = new Client({ connectionString });
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const db = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
 await db.connect();
+
 export default db;

@@ -12,17 +12,21 @@ import 'dotenv/config';
 
 const app = express();
 
+// Habilita CORS
 app.use(cors());
 
+// Webhooks deben ir antes de express.json
 app.use('/api/stripe', paymentsWebhookRouter);
 
+// JSON Body Parser
 app.use(express.json());
 
+// Endpoint base
 app.get('/', (req, res) => {
   res.json({ hola: 'mundo' });
 });
 
-// Routers normales
+// Rutas API
 app.use('/api/users', usersRouter);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/payments', paymentsRouter);
@@ -31,7 +35,9 @@ app.use('/api/bus', busRoutes);
 
 // Middleware de errores
 app.use((err, req, res, _next) => {
-  console.log(err);
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(err); // log solo en dev
+  }
 
   if (err instanceof ZodError) {
     const messages = err.issues.map((zodError) => zodError.message);
@@ -43,13 +49,11 @@ app.use((err, req, res, _next) => {
     return res.status(err.status).json({ error: err.message });
   }
 
-  if (err instanceof DatabaseError) {
-    if (err.code === '22P02') {
-      return res.status(400).json({ error: 'Hubo un error. Contacte al administrador' });
-    }
+  if (err instanceof DatabaseError && err.code === '22P02') {
+    return res.status(400).json({ error: 'Hubo un error. Contacte al administrador' });
   }
 
-  res.json({ error: 'HUBO UN ERROR' });
+  return res.status(500).json({ error: 'HUBO UN ERROR' });
 });
 
 export default app;
