@@ -32,7 +32,12 @@ export const buscarRutas = async (req, res) => {
     const origenCoords = await geocode(origen);
     const destinoCoords = await geocode(destino);
 
-    const rutas = (await findNearbyRoutes(origenCoords, destinoCoords)) || [];
+    const rutas = await findNearbyRoutes(origenCoords, destinoCoords);
+
+    if (!rutas || rutas.length === 0) {
+      console.log('⚠️ No se encontraron rutas cercanas');
+      return res.status(200).json({ rutas: [] });
+    }
 
     res.status(200).json({ rutas });
   } catch (error) {
@@ -68,7 +73,6 @@ export const geocodificarDireccion = async (req, res) => {
     const data = await response.json();
 
     if (!data.results || data.results.length === 0) {
-      // Mensaje más general ya que podría ser una dirección o coordenadas
       return res
         .status(404)
         .json({ message: 'No se encontraron resultados para la ubicación proporcionada.' });
@@ -76,7 +80,7 @@ export const geocodificarDireccion = async (req, res) => {
 
     // Extraer la información relevante según el tipo de solicitud
     const resultLocation = data.results[0].geometry.location; // lat y lng del primer resultado
-    const formattedAddress = data.results[0].formatted_address; // Dirección legible
+    const formattedAddress = data.results[0].formatted_address; 
 
     // Devolver las coordenadas y también la dirección formateada
     res.status(200).json({
