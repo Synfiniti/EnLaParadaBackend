@@ -9,11 +9,11 @@ export const buscarRutas = async (req, res) => {
       return res.status(400).json({ message: 'Origen y destino son requeridos' });
     }
 
-    const rutas = await findNearbyRoutes(origen, destino);
+    const rutas = (await findNearbyRoutes(origen, destino)) || [];
 
     res.status(200).json({ rutas });
   } catch (error) {
-    console.error('Error buscando rutas:', error);
+    console.error('❌ Error buscando rutas:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
@@ -26,7 +26,7 @@ export const geocodificarDireccion = async (req, res) => {
   }
 
   try {
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY; 
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
       direccion,
     )}&region=VE&key=${apiKey}`;
@@ -42,7 +42,7 @@ export const geocodificarDireccion = async (req, res) => {
 
     res.status(200).json({ lat, lng });
   } catch (error) {
-    console.error('Error geocodificando dirección:', error);
+    console.error('❌ Error geocodificando dirección:', error);
     res.status(500).json({ message: 'Error geocodificando dirección' });
   }
 };
