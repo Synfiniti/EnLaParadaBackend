@@ -304,7 +304,7 @@ usersRouter.post('/:id/upload-carnet', upload.single('carnet'), async (req, res)
       return res.status(400).json({ message: 'No se recibió ninguna imagen.' });
     }
 
-    const imageUrl = `https://enlaparadabackend.onrender.com/uploads/uploads/${req.file.filename}`;
+    const imageUrl = `https://enlaparadabackend.onrender.com/uploads/${req.file.filename}`;
 
     // Opcional: guardar directamente en la DB
     await db.query('UPDATE users SET carnet_circulacion = $1 WHERE id_usuario = $2', [
