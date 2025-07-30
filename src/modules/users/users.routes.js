@@ -244,7 +244,7 @@ usersRouter.post('/:id/upload-profile', upload.single('foto'), async (req, res) 
     console.error('Error al subir imagen:', error);
     res.status(500).json({ message: 'Error al subir imagen.' });
   }
-});;
+});
 
 // POST para enviar el codigo de verificacion
 usersRouter.post('/:id/send-verification-code', async (req, res, next) => {
@@ -304,10 +304,13 @@ usersRouter.post('/:id/upload-carnet', upload.single('carnet'), async (req, res)
       return res.status(400).json({ message: 'No se recibió ninguna imagen.' });
     }
 
-    const imageUrl = `http://192.168.1.210:3000/uploads/${req.file.filename}`;
+    const imageUrl = `https://enlaparadabackend.onrender.com/uploads/uploads/${req.file.filename}`;
 
     // Opcional: guardar directamente en la DB
-    await db.query('UPDATE users SET carnet_circulacion = $1 WHERE id_usuario = $2', [imageUrl, userId]);
+    await db.query('UPDATE users SET carnet_circulacion = $1 WHERE id_usuario = $2', [
+      imageUrl,
+      userId,
+    ]);
 
     res.status(200).json({ message: 'Carnet de circulación subido', url: imageUrl });
   } catch (error) {
@@ -315,6 +318,5 @@ usersRouter.post('/:id/upload-carnet', upload.single('carnet'), async (req, res)
     res.status(500).json({ message: 'Error al subir carnet.' });
   }
 });
-
 
 export default usersRouter;
