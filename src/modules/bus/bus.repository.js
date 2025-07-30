@@ -16,7 +16,6 @@ export const findNearbyRoutes = async (origen, destino, maxDistanceMeters = 1000
   `,
     [latOrigen, lngOrigen, maxDistanceMeters],
   );
-
   // Consulta rutas cercanas al destino
   const resDestino = await db.query(
     `
