@@ -9,7 +9,30 @@ export const buscarRutas = async (req, res) => {
       return res.status(400).json({ message: 'Origen y destino son requeridos' });
     }
 
-    const rutas = (await findNearbyRoutes(origen, destino)) || [];
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+    const geocode = async (direccion) => {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        direccion,
+      )}&region=VE&key=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.results || data.results.length === 0) {
+        throw new Error(`No se pudo geocodificar la dirección: ${direccion}`);
+      }
+
+      return {
+        lat: data.results[0].geometry.location.lat,
+        lng: data.results[0].geometry.location.lng,
+      };
+    };
+
+    // Geocodifica origen y destino
+    const origenCoords = await geocode(origen);
+    const destinoCoords = await geocode(destino);
+
+    const rutas = (await findNearbyRoutes(origenCoords, destinoCoords)) || [];
 
     res.status(200).json({ rutas });
   } catch (error) {
