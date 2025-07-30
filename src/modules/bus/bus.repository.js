@@ -1,10 +1,10 @@
 import db from '../../db/index.js';
 
-export const findNearbyRoutes = async (origen, destino, maxDistanceMeters = 500) => {
+export const findNearbyRoutes = async (origen, destino, maxDistanceMeters = 1000) => {
   const { lat: latOrigen, lng: lngOrigen } = origen;
   const { lat: latDestino, lng: lngDestino } = destino;
 
-  // Encuentra rutas donde al menos un punto esté cerca del origen
+  // Consulta rutas cercanas al origen
   const resOrigen = await db.query(
     `
     SELECT DISTINCT r.id_ruta
@@ -17,6 +17,7 @@ export const findNearbyRoutes = async (origen, destino, maxDistanceMeters = 500)
     [latOrigen, lngOrigen, maxDistanceMeters],
   );
 
+  // Consulta rutas cercanas al destino
   const resDestino = await db.query(
     `
     SELECT DISTINCT r.id_ruta
@@ -31,11 +32,16 @@ export const findNearbyRoutes = async (origen, destino, maxDistanceMeters = 500)
 
   const rutasOrigen = resOrigen.rows.map((r) => r.id_ruta);
   const rutasDestino = resDestino.rows.map((r) => r.id_ruta);
-
   const rutasCoincidentes = rutasOrigen.filter((id) => rutasDestino.includes(id));
+
+  // Logging para depuración
+  console.log('🟢 Rutas cercanas al origen:', rutasOrigen);
+  console.log('🟢 Rutas cercanas al destino:', rutasDestino);
+  console.log('🟢 Rutas coincidentes:', rutasCoincidentes);
 
   if (rutasCoincidentes.length === 0) return [];
 
+  // Trae las rutas con sus puntos
   const rutasCompletas = await db.query(
     `
     SELECT r.*, 
