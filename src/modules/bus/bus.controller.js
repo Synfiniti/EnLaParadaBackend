@@ -19,30 +19,50 @@ export const buscarRutas = async (req, res) => {
 };
 
 export const geocodificarDireccion = async (req, res) => {
-  const { direccion } = req.body;
+  const { direccion, lat, lng } = req.body; // Ahora acepta 'direccion' O 'lat' y 'lng'
 
-  if (!direccion) {
-    return res.status(400).json({ message: 'La dirección es requerida' });
+  // Validar que al menos una de las formas de entrada está presente
+  if (!direccion && (!lat || !lng)) {
+    return res
+      .status(400)
+      .json({ message: 'Se requiere una dirección textual o coordenadas (lat, lng).' });
   }
 
   try {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      direccion,
-    )}&region=VE&key=${apiKey}`;
+    let url;
+
+    if (direccion) {
+      // Caso 1: Geocodificación (dirección textual a lat/lng)
+      url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(direccion)}&region=VE&key=${apiKey}`;
+    } else {
+      // Caso 2: Geocodificación inversa (lat/lng a dirección textual)
+      // Nota: Google Geocoding API usa 'latlng' para geocodificación inversa
+      url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&region=VE&key=${apiKey}`;
+    }
 
     const response = await fetch(url);
     const data = await response.json();
 
     if (!data.results || data.results.length === 0) {
-      return res.status(404).json({ message: 'No se encontraron coordenadas para esa dirección' });
+      // Mensaje más general ya que podría ser una dirección o coordenadas
+      return res
+        .status(404)
+        .json({ message: 'No se encontraron resultados para la ubicación proporcionada.' });
     }
 
-    const { lat, lng } = data.results[0].geometry.location;
+    // Extraer la información relevante según el tipo de solicitud
+    const resultLocation = data.results[0].geometry.location; // lat y lng del primer resultado
+    const formattedAddress = data.results[0].formatted_address; // Dirección legible
 
-    res.status(200).json({ lat, lng });
+    // Devolver las coordenadas y también la dirección formateada
+    res.status(200).json({
+      lat: resultLocation.lat,
+      lng: resultLocation.lng,
+      address: formattedAddress, // ¡Esto es nuevo y necesario para el frontend!
+    });
   } catch (error) {
-    console.error('❌ Error geocodificando dirección:', error);
-    res.status(500).json({ message: 'Error geocodificando dirección' });
+    console.error('❌ Error en el servicio de geocodificación:', error);
+    res.status(500).json({ message: 'Error interno en el servicio de geocodificación.' });
   }
 };
