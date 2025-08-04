@@ -1,7 +1,10 @@
 import stripe from '../../utils/stripe.js';
-import { getWalletMovements } from './payments.repository.js';
-import { transferToDriverWallet } from './payments.repository.js';
-import { simulateWithdrawFromWallet } from './payments.repository.js';
+import {
+  getWalletMovements,
+  simulateWithdrawFromWallet,
+  transferToDriverWallet,
+  addFundsToWallet,
+} from './payments.repository.js';
 
 //intento de pago
 export const createPaymentIntent = async (req, res, next) => {
@@ -92,5 +95,40 @@ export const simulateWithdraw = async (req, res) => {
   } catch (error) {
     console.error('Error al simular retiro:', error.message);
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const simulateDeposit = async (req, res) => {
+  const { userId, referencia, banco, cedula, monto } = req.body;
+
+  if (!userId || !referencia || !banco || !cedula || !monto) {
+    return res.status(400).json({ error: 'Todos los campos son requeridos' });
+  }
+
+  try {
+    const descripcion = `Depósito simulado: Ref ${referencia}, Banco ${banco}, Cédula ${cedula}`;
+    await addFundsToWallet(userId, monto, descripcion);
+    res.status(200).json({ message: 'Depósito simulado exitosamente' });
+  } catch (error) {
+    console.error('Error al simular depósito:', error);
+    res.status(500).json({ error: 'Error al simular el depósito' });
+  }
+};
+
+export const simulateTopUp = async (req, res) => {
+  const { userId, amount, bank, cedula, referencia } = req.body;
+
+  if (!userId || !amount || !bank || !cedula || !referencia) {
+    return res.status(400).json({ error: 'Todos los campos son requeridos' });
+  }
+
+  try {
+    const descripcion = `Recarga - Banco: ${bank}, Ref: ${referencia}, Cédula: ${cedula}`;
+    await addFundsToWallet(userId, amount, descripcion);
+
+    res.status(200).json({ message: 'Recarga exitosa' });
+  } catch (error) {
+    console.error('Error al recargar saldo:', error.message);
+    res.status(500).json({ error: 'Error al recargar saldo' });
   }
 };
