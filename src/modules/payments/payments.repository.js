@@ -1,7 +1,7 @@
 import db from '../../db/index.js';
 
 //añadir fondos wallet
-export const addFundsToWallet = async (userId, amount, description = 'Recarga Stripe') => {
+export const addFundsToWallet = async (userId, amount, description = 'Recarga') => {
   try {
     // Iniciar transacción
     await db.query('BEGIN');
